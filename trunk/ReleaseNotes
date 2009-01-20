@@ -1,4 +1,12 @@
-sqlitegen 0.1.0
+
+sqlitegen 0.1.11
+
+Fix bug in cursor populating that would affect any cursors that do not
+read all columns in order
+
+Add Gen_delete method to IdImplementationBase
+
+sqlitegen 0.1.10
 
 Initial version-- appears to work
 
