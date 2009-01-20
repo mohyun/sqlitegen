@@ -195,6 +195,8 @@ class TableDefinition {
 			id.closeBrace();
 			id.iprintln(";");
 		}
+		
+		id.nl();
 		id.iprintln(MessageFormat.format("public String Gen_tableName() '{' return {0}; }",TABLE_NAME_SYMBOL));
 		
 		id.nl();
@@ -259,7 +261,7 @@ class TableDefinition {
 		for (int i = 0; i < fieldDefinitions.size(); i++)
 		{
 			FieldDefinition fd=fieldDefinitions.get(i);
-			id.iprintln(MessageFormat.format("if ( ! cursor.isNull({0})) '{'", i));
+			id.iprintln(MessageFormat.format("if ( columnIndices[{0}] >= 0 && ! cursor.isNull(columnIndices[{0}])) '{'", idSymbol(fd)));
 			switch (fd.type){
 			case INTEGER :
 			case INTEGER_PRIMARY_KEY :
