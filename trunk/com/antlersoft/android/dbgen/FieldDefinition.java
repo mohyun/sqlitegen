@@ -12,8 +12,13 @@ import com.antlersoft.android.db.FieldVisibility;
  *
  */
 class FieldDefinition {
-	
+	/**
+     * Name as it appears in java
+	 */
 	String name;
+	/**
+	 * Column name in database table
+	 */
 	String columnName;
 	FieldType type;
 	String javaTypeCode;
