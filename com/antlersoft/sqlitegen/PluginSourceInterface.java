@@ -82,6 +82,24 @@ public class PluginSourceInterface implements SourceInterface {
 			throws IOException, SIException {
 		for ( IPackageFragmentRoot root : sourceRoots)
 		{
+			try
+			{
+				if (root.getKind() == IPackageFragmentRoot.K_SOURCE)
+				{
+					if (root.getElementName().equals("gen"))
+					{
+						IPackageFragment fragment=root.getPackageFragment(packageName);
+						return new PluginSourceWriter(new StringWriter(), fragment, className);
+					}
+				}
+			}
+			catch (JavaModelException jme)
+			{
+				
+			}
+		}
+		for ( IPackageFragmentRoot root : sourceRoots)
+		{
 			IPackageFragment fragment=root.getPackageFragment(packageName);
 			try
 			{

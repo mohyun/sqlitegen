@@ -223,6 +223,10 @@ public class SourceFileGenerator {
 		if ( specifiedName.length()>0)
 			fieldName=specifiedName;
 		String columnName=fieldName.toUpperCase();
+		if (columnName.equals("_ID"))
+		{
+			columnName = "_id";
+		}
 		FieldDefinition fd=null;
 		for ( FieldDefinition existing : td.fieldDefinitions)
 		{
@@ -276,7 +280,7 @@ public class SourceFileGenerator {
 						fd.javaTypeCode.equals(TypeParse.ARG_SHORT) || fd.javaTypeCode.equals(TypeParse.ARG_BOOLEAN) ||
 						fd.javaTypeCode.equals(TypeParse.ARG_BYTE)) {
 				fd.type=FieldType.INTEGER;
-				if ( columnName.equals("_ID"))
+				if ( columnName.equals("_id"))
 					fd.type=FieldType.INTEGER_PRIMARY_KEY;
 			}
 			else

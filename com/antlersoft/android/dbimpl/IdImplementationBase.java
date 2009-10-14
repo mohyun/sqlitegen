@@ -23,7 +23,7 @@ public abstract class IdImplementationBase extends ImplementationBase {
 	 * @return
 	 */
 	private static ContentValues removeId(ContentValues cv) {
-		cv.remove("_ID");
+		cv.remove("_id");
 		return cv;
 	}
 	
@@ -48,7 +48,7 @@ public abstract class IdImplementationBase extends ImplementationBase {
 	 * @return Number of rows deleted
 	 */
 	public int Gen_delete(SQLiteDatabase db) {
-		return db.delete(Gen_tableName(), "_ID = ?", new String[] { Long.toString(get_Id()) });
+		return db.delete(Gen_tableName(), "_id = ?", new String[] { Long.toString(get_Id()) });
 	}
 	
 	/**
@@ -57,6 +57,6 @@ public abstract class IdImplementationBase extends ImplementationBase {
 	 * @return Number of rows updated
 	 */
 	public int Gen_update(SQLiteDatabase db) {
-		return db.update(Gen_tableName(), removeId(Gen_getValues()), "_ID = ?", new String[] { Long.toString(get_Id()) });
+		return db.update(Gen_tableName(), removeId(Gen_getValues()), "_id = ?", new String[] { Long.toString(get_Id()) });
 	}
 }
