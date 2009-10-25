@@ -286,7 +286,12 @@ public class SourceFileGenerator {
 			else
 				fd.type=FieldType.BLOB;
 		}
-		fd.defaultValue=a.getElementValueAsString(cw,"DefaultValue");
+		fd.nullable=getElementValueBoolean("Nullable", cw, a, true);
+		fd.defaultValue=null;
+		if (a.getElementValue(cw, "DefaultValue")!=null)
+		{
+			fd.defaultValue=a.getElementValueAsString(cw,"DefaultValue");
+		}
 		String visibility=a.getElementValueAsString(cw, "Visbility");
 		if ( visibility.length()==0)
 			fd.visibility=FieldVisibility.PRIVATE;
