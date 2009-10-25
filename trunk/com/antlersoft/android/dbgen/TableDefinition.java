@@ -135,7 +135,106 @@ class TableDefinition {
 		return false;
 	}
 	
+	/**
+	 * Escape a string so it can appear within Oracle single quotes
+	 * @param f string to escape
+	 * @return string with any ' characters doubled
+	 */
+	private static String escapeDBString(String f)
+	{
+		StringBuilder b=new StringBuilder();
+		int l = f.length();
+		for (int i=0; i<l; i++)
+		{
+			char c = f.charAt(i);
+			if (c == '\'')
+			{
+				b.append(c);
+			}
+			b.append(c);
+		}
+		return b.toString();
+	}
+	
+	/**
+	 * Escape a string so it can appear within a double quoted string in Java source code
+	 * @param f string to escape
+	 * @return string with any " characters doubled and control characters converted to
+	 * octal escapes
+	 */
+	private static String escapeJavaString(String f)
+	{
+		StringBuilder b=new StringBuilder();
+		int l = f.length();
+		for (int i=0; i<l; i++)
+		{
+			char c = f.charAt(i);
+			if (c=='"')
+			{
+				b.append("\\\"");
+			}
+			else if (Character.getType(c)==Character.CONTROL)
+			{
+				b.append('\\');
+				b.append(Integer.toOctalString(c));
+			}
+			else
+			{
+				b.append(c);
+			}
+		}
+		return b.toString();
+	}
+
+	/**
+	 * Return a string representing the default value of the field if one was provided
+	 * @param fd
+	 * @return
+	 * @throws SourceInterface.SIException
+	 */
+	private static String defaultValueString(FieldDefinition fd)
+	throws SourceInterface.SIException
+	{
+		StringBuilder result=new StringBuilder();
+		if (fd.defaultValue!=null)
+		{
+			switch (fd.type)
+			{
+			case BLOB :
+			case TEXT :
+				result.append(" DEFAULT ");
+				result.append('\'');
+			    result.append(escapeJavaString(escapeDBString(fd.defaultValue)));
+			    result.append('\'');
+			    break;
+			case INTEGER :
+				if (fd.javaType.equals("boolean"))
+				{
+					result.append(" DEFAULT ");
+					result.append(fd.defaultValue.equals("true") ? 1 : 0);
+					break;
+				}
+				// Intentionally fall through for non-boolean case
+			case REAL :
+				try
+				{
+					double v = Double.parseDouble(fd.defaultValue);
+					result.append(" DEFAULT ");
+					result.append(v);
+				}
+				catch (NumberFormatException nfe)
+				{
+					throw new SourceInterface.SIException(fd.defaultValue + " could not be interpreted as a number");
+				}
+			default :
+				throw new SourceInterface.SIException("Inappropriate field type for getting default value "+fd.type.toString());
+			}
+		}
+		return result.toString();
+	}
+	
 	void generateClassDefinition( PrintWriter pw)
+	throws SourceInterface.SIException
 	{
 		Indenter id=new Indenter(pw);
 		pw.println( MessageFormat.format( "// This class was generated from {0}.{1} by a tool", packageName, interfaceName));
@@ -167,6 +266,12 @@ class TableDefinition {
 			String type = fd.type.toString();
 			if (fd.type == FieldType.INTEGER_PRIMARY_KEY) {
 				type = "INTEGER PRIMARY KEY AUTOINCREMENT";
+			} else {
+				if (! fd.nullable)
+				{
+					type = type + " NOT NULL";
+				}
+				type = type + defaultValueString(fd);
 			}
 			id.iprintln(MessageFormat.format("\"{0} {1}{2}\" +", fd.columnName, type, i == fieldDefinitions.size()-1 ? "" : ","));
 		}
