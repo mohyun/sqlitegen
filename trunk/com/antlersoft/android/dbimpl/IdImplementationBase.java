@@ -4,6 +4,7 @@
 package com.antlersoft.android.dbimpl;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 /**
@@ -28,9 +29,28 @@ public abstract class IdImplementationBase extends ImplementationBase {
 	}
 	
 	/**
+	 * Populates this object with the contents of the row in the table for this class
+	 * with the specified id
+	 * @param db Database containing table for this class
+	 * @param id Id of the row to read (value of the _id column)
+	 * @return True if the row was found and read; false otherwise
+	 */
+	public boolean Gen_read(SQLiteDatabase db, long id) {
+		Cursor c = db.query(Gen_tableName(), null, "_id = ?", new String[] { Long.toString(id) }, null, null, null);
+		
+		if (c.moveToFirst())
+		{
+			Gen_populate(c, Gen_columnIndices(c));
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Insert a row in the table with the values of this instance 
 	 * @param db
-	 * @return
+	 * @return true if the row was inserted, false otherwise
 	 */
 	public boolean Gen_insert(SQLiteDatabase db) {
 		long id=db.insert(Gen_tableName(),null,removeId(Gen_getValues()));
