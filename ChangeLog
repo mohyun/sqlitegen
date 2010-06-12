@@ -1,3 +1,7 @@
+--dbimpl 0.1.4
+
+Add Gen_read function to base class of _id objects
+
 --sqlitegen 0.1.16
 Add nullable and default value properties to table creation string.
 --sqlitegen 0.1.15
