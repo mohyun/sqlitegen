@@ -37,14 +37,16 @@ public abstract class IdImplementationBase extends ImplementationBase {
 	 */
 	public boolean Gen_read(SQLiteDatabase db, long id) {
 		Cursor c = db.query(Gen_tableName(), null, "_id = ?", new String[] { Long.toString(id) }, null, null, null);
+		boolean result = false;
 		
 		if (c.moveToFirst())
 		{
 			Gen_populate(c, Gen_columnIndices(c));
-			return true;
+			result = true;
 		}
 		
-		return false;
+		c.close();
+		return result;
 	}
 	
 	/**
