@@ -23,7 +23,7 @@ public class RuntimeVisibleParameterAnnotationsAttribute implements Attribute {
 	RuntimeVisibleParameterAnnotationsAttribute( DataInputStream classStream)
 	throws IOException
 	{
-		numParameters=classStream.readUnsignedShort();
+		numParameters=classStream.read();
 		parameterAnnotations=new ParameterAnnotation[numParameters];
 		for ( int i=0; i<numParameters; ++i)
 		{

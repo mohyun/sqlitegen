@@ -1,3 +1,16 @@
+--contentxml 0.1.0
+
+Original version for storing contents or db contents to XML file
+
+--sqlitegen 0.1.17
+
+Fix obscure bug in classwriter when reading parameter annotations (generally
+not visible to users, but change to common library)
+
+--dbimpl 0.1.5
+
+Fix not closing cursor in Gen_read
+
 --dbimpl 0.1.4
 
 Add Gen_read function to base class of _id objects
