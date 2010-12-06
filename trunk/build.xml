@@ -1,12 +1,12 @@
 <!--
-Copyright 2005-2009 Michael A. MacDonald
+Copyright 2005-2010 Michael A. MacDonald
 Please make changes to the sqlitegen_ant.properties file
 
 Requires ant 1.6+
 -->
 <project name="sqlitegen" default="all">
 	<property file="sqlitegen_ant.properties"/>
-	<target name="all" depends="android.db.jar,sqlitegen_eclipse_site"/>
+	<target name="all" depends="android.db.jar,android.contentxml.jar,sqlitegen_eclipse_site"/>
 	<target name="android.db.jar" depends="buildcommon">
 		<mkdir dir="dist"/>
 		<javac source="${sqlitegen.source}" target="${sqlitegen.target}" sourcepath="." classpath="${android.sdk.lib}" destdir="classes">
@@ -14,6 +14,15 @@ Requires ant 1.6+
 		</javac>
 		<jar destfile="dist/com.antlersoft.android.db_${android.db.version}.jar" basedir="classes"
 		includes="com/antlersoft/android/db/** com/antlersoft/android/dbimpl/**">
+		</jar>
+	</target>
+	<target name="android.contentxml.jar" depends="buildcommon">
+		<mkdir dir="dist"/>
+		<javac source="${sqlitegen.source}" target="${sqlitegen.target}" sourcepath="." classpath="${android.sdk.lib}" destdir="classes">
+			<src path="com/antlersoft/android/contentxml"/>
+		</javac>
+		<jar destfile="dist/com.antlersoft.android.contentxml_${android.contentxml.version}.jar" basedir="classes"
+		includes="com/antlersoft/android/contentxml/** com/antlersoft/util/xml/**">
 		</jar>
 	</target>
 	<target name="sqlitegen_eclipse" depends="buildeclipse">
@@ -38,6 +47,7 @@ Requires ant 1.6+
 	</target>
 	<target name="buildcommon">
 		<mkdir dir="classes"/>
+		<delete file="com/antlersoft/util/xml/ElementTransformReader.java"/>
 		<javac source="${sqlitegen.source}" target="${sqlitegen.target}" sourcepath="." destdir="classes">
 			<src path="com/antlersoft/android/db;com/antlersoft/android/dbgen;com/antlersoft/classwriter;com/antlersoft/util"/>
 		</javac>
@@ -51,7 +61,7 @@ Requires ant 1.6+
 			<classpath>
 			  <pathelement path="${classpath}"/>
 			  <fileset dir="${plugins.path}">
-			    <include name="*.jar"/>
+			    <include name="**/*.jar"/>
 		      </fileset>
 			</classpath>
 			<src path="com/antlersoft/sqlitegen"/>
