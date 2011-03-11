@@ -1,3 +1,9 @@
+--contentxml 0.1.1, 0.1.18, 0.1.6
+
+Storing db contents actually works now.
+
+Unrelated fixes to XML and bytecode code bases part of product
+
 --contentxml 0.1.0
 
 Original version for storing contents or db contents to XML file

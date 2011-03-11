@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Stack;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -17,6 +18,7 @@ import android.util.Xml;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xmlpull.v1.XmlSerializer;
@@ -37,12 +39,146 @@ import com.antlersoft.util.xml.SimpleAttributes;
  */
 public class SqliteElement implements IElement {
 	
+	/**
+	 * android xml parsing does not use an XmlReader that
+	 * HandlerStack was designed around; instead we'll interpose
+	 * this content handler layer that manages a stack of
+	 * ContentHandlers.
+	 * @author Michael A. MacDonald
+	 *
+	 */
+	public static class StackContentHandler implements ContentHandler, IHandlerStack {
+
+		private Stack<ContentHandler> _stack = new Stack<ContentHandler>();
+		/* (non-Javadoc)
+		 * @see com.antlersoft.util.xml.IHandlerStack#popHandlerStack()
+		 */
+		@Override
+		public void popHandlerStack() {
+			_stack.pop();
+		}
+
+		/* (non-Javadoc)
+		 * @see com.antlersoft.util.xml.IHandlerStack#pushHandlerStack(org.xml.sax.helpers.DefaultHandler)
+		 */
+		@Override
+		public void pushHandlerStack(DefaultHandler handler) {
+			_stack.push(handler);
+		}
+
+		/* (non-Javadoc)
+		 * @see com.antlersoft.util.xml.IHandlerStack#startWithHandler(org.xml.sax.helpers.DefaultHandler, java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
+		 */
+		@Override
+		public void startWithHandler(DefaultHandler handler, String uri,
+				String localName, String qName, Attributes attributes)
+				throws SAXException {
+			_stack.push(handler);
+			handler.startElement(uri, localName, qName, attributes);
+		}
+
+	
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#characters(char[], int, int)
+		 */
+		@Override
+		public void characters(char[] arg0, int arg1, int arg2)
+				throws SAXException {
+			_stack.peek().characters(arg0, arg1, arg2);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#endDocument()
+		 */
+		@Override
+		public void endDocument() throws SAXException {
+			_stack.peek().endDocument();
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#endElement(java.lang.String, java.lang.String, java.lang.String)
+		 */
+		@Override
+		public void endElement(String arg0, String arg1, String arg2)
+				throws SAXException {
+			_stack.peek().endElement(arg0, arg1, arg2);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#endPrefixMapping(java.lang.String)
+		 */
+		@Override
+		public void endPrefixMapping(String arg0) throws SAXException {
+			_stack.peek().endPrefixMapping(arg0);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#ignorableWhitespace(char[], int, int)
+		 */
+		@Override
+		public void ignorableWhitespace(char[] arg0, int arg1, int arg2)
+				throws SAXException {
+			_stack.peek().ignorableWhitespace(arg0, arg1, arg2);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#processingInstruction(java.lang.String, java.lang.String)
+		 */
+		@Override
+		public void processingInstruction(String arg0, String arg1)
+				throws SAXException {
+			_stack.peek().processingInstruction(arg0, arg1);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#setDocumentLocator(org.xml.sax.Locator)
+		 */
+		@Override
+		public void setDocumentLocator(Locator arg0) {
+			_stack.peek().setDocumentLocator(arg0);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#skippedEntity(java.lang.String)
+		 */
+		@Override
+		public void skippedEntity(String arg0) throws SAXException {
+			_stack.peek().skippedEntity(arg0);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#startDocument()
+		 */
+		@Override
+		public void startDocument() throws SAXException {
+			_stack.peek().startDocument();
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#startElement(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
+		 */
+		@Override
+		public void startElement(String arg0, String arg1, String arg2,
+				Attributes arg3) throws SAXException {
+			_stack.peek().startElement(arg0, arg1, arg2, arg3);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.xml.sax.ContentHandler#startPrefixMapping(java.lang.String, java.lang.String)
+		 */
+		@Override
+		public void startPrefixMapping(String arg0, String arg1)
+				throws SAXException {
+			_stack.peek().startPrefixMapping(arg0, arg1);
+		}
+
+	}
 	private ArrayList<String> _tableNames;
 	SQLiteDatabase _db;
 	private ReplaceStrategy _replaceStrategy;
 	private String _databaseTag;
 	
-	static final String[] TABLE_ARRAY = new String[] { "table" };
+	static final String[] TABLE_ARRAY = new String[] { "name" };
 	static final String TABLE_ELEMENT = "table";
 	static final String TABLE_NAME_ATTRIBUTE = "table_name";
 	static final String ROW_ELEMENT = "row";
@@ -100,7 +236,9 @@ public class SqliteElement implements IElement {
 	{
 		SqliteElement element = new SqliteElement(db, "database");
 		element.setReplaceStrategy(replace);
-		Xml.parse(input, element.readFromXML(new HandlerStack(null)));
+		StackContentHandler handler = new StackContentHandler();
+		handler.pushHandlerStack(element.readFromXML(handler));
+		Xml.parse(input, handler);
 	}
 	
 	/**
@@ -146,11 +284,14 @@ public class SqliteElement implements IElement {
 			Cursor c = _db.query("sqlite_master", TABLE_ARRAY, "type = 'table'", null, null, null, null);
 			try
 			{
-				String t = c.getString(0);
-				String test = t.toLowerCase();
-				if (! test.equals("android_metadata") && ! test.equals("sqlite_sequence"))
+				while (c.moveToNext())
 				{
-					_tableNames.add(t);
+					String t = c.getString(0);
+					String test = t.toLowerCase();
+					if (! test.equals("android_metadata") && ! test.equals("sqlite_sequence"))
+					{
+						_tableNames.add(t);
+					}
 				}
 			}
 			finally
@@ -244,7 +385,7 @@ public class SqliteElement implements IElement {
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException {
 			saveLastRow();
-			if (qName.equals(TABLE_ELEMENT))
+			if (localName.equals(TABLE_ELEMENT))
 			{
 				_currentTable = attributes.getValue(TABLE_NAME_ATTRIBUTE);
 				if (_currentTable == null)
@@ -261,9 +402,9 @@ public class SqliteElement implements IElement {
 				else
 					_currentTable = null;
 			}
-			else if (qName.equals(ROW_ELEMENT))
+			else if (localName.equals(ROW_ELEMENT))
 			{
-				ContentValues _lastRow = new ContentValues();
+				_lastRow = new ContentValues();
 				ContentValuesElement rowElement = new ContentValuesElement(_lastRow, ROW_ELEMENT);
 				_stack.startWithHandler(rowElement.readFromXML(_stack), uri, localName, qName, attributes);
 			}
@@ -309,10 +450,12 @@ public class SqliteElement implements IElement {
 	static class XmlSerializerHandler extends DefaultHandler {
 		
 		XmlSerializer _serializer;
+		boolean _first;
 		
 		XmlSerializerHandler(XmlSerializer serializer)
 		{
 			_serializer = serializer;
+			_first = true;
 		}
 
 		/* (non-Javadoc)
@@ -371,11 +514,18 @@ public class SqliteElement implements IElement {
 				Attributes attributes) throws SAXException {
 			try
 			{
+				if (_first)
+					_first = false;
+				else
+					_serializer.ignorableWhitespace("\r\n");
 				_serializer.startTag(uri, qName);
-				int l = attributes.getLength();
-				for (int i = 0; i < l; i++)
+				if (attributes != null)
 				{
-					_serializer.attribute(attributes.getURI(i), attributes.getQName(i), attributes.getValue(i));
+					int l = attributes.getLength();
+					for (int i = 0; i < l; i++)
+					{
+						_serializer.attribute(attributes.getURI(i), attributes.getQName(i), attributes.getValue(i));
+					}
 				}
 			}
 			catch (IOException ioe)
