@@ -62,7 +62,8 @@ public class ContentValuesElement implements IElement, ISimpleElement {
 		
 		for (Map.Entry<String,Object> entry : _values.valueSet())
 		{
-			a.addValue(entry.getKey(), entry.getValue());
+			if (entry.getKey() != null && entry.getValue() != null)
+				a.addValue(entry.getKey(), entry.getValue());
 		}
 		
 		xmlWriter.startElement( "", "", getElementTag(), a.getAttributes());
@@ -78,7 +79,7 @@ public class ContentValuesElement implements IElement, ISimpleElement {
 		int len = attributes.getLength();
 		for (int i = 0; i < len; i++)
 		{
-			_values.put(attributes.getQName(i),attributes.getValue(i));
+			_values.put(attributes.getLocalName(i),attributes.getValue(i));
 		}
 	}
 
